@@ -1,6 +1,5 @@
 package com.wolfcstech.hellojni;
 
-import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -38,5 +37,18 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, " " + i2arr[i][j]);
             }
         }
+
+        jniTest.setString("abc");
+        jniTest.accessField();
+        Log.d(TAG, "In java: " + " instancField.str = \"" + jniTest.getString() + "\"");
+
+        jniTest.setStaticInt(100);
+        jniTest.accessStaticField();
+        Log.d(TAG, "In java: " + " FieldAccess.staticInt = " + jniTest.getStaticInt());
+
+        jniTest.accessStaticFieldInStaticNativeMethod();
+
+        jniTest.nativeCallMethod();
+        jniTest.nativeCallStaticMethod();
     }
 }

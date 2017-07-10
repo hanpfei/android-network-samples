@@ -76,12 +76,103 @@ static jobjectArray JniTest_initInt2DArray(JNIEnv* env, jobject thiz, jint size)
     return result;
 }
 
+static void JniTest_accessField(JNIEnv* env, jobject thiz) {
+    jfieldID fid; /* Store the field ID */
+    jstring jstr;
+    const char *str;
+
+    /* Get a reference to obj's class */
+    jclass cls = env->FindClass("com/wolfcstech/hellojni/JniTest");
+
+    /* Look for the instance field str in cls */
+    fid = env->GetFieldID(cls, "str", "Ljava/lang/String;");
+    if (fid == NULL) {
+        return; /* Failed to find the field */
+    }
+
+    /* Read the instance field str */
+    jstr = (jstring)env->GetObjectField(thiz, fid);
+    str = env->GetStringUTFChars(jstr, NULL);
+    if (str == NULL) {
+        return; /* Out of memory */
+    }
+    LOGI(" instancField.str = \" %s \"", str);
+    env->ReleaseStringUTFChars(jstr, str);
+
+    /* Create a new string and overwrite the instance field */
+    jstr = env->NewStringUTF("123");
+    if (jstr == NULL) {
+        return; /* Out of memory */
+    }
+    env->SetObjectField(thiz, fid, jstr);
+}
+
+static void JniTest_accessStaticField(JNIEnv* env, jobject thiz) {
+    jfieldID fid; /* Store the field ID */
+    jint si;
+
+    /* Get a reference to obj's class */
+    jclass cls = env->GetObjectClass(thiz);
+
+    /* Look for the instance field str in cls */
+    fid = env->GetStaticFieldID(cls, "staticInt", "I");
+    if (fid == NULL) {
+        return; /* Failed to find the field */
+    }
+    /* Access the static field staticInt */
+    si = env->GetStaticIntField(cls, fid);
+    LOGI(" FieldAccess.staticInt = %d", si);
+    env->SetStaticIntField(cls, fid, 200);
+}
+
+static void JniTest_accessStaticFieldInStaticNativeMethod(JNIEnv* env, jclass jcls) {
+    jfieldID fid; /* Store the field ID */
+    jint si;
+
+    /* Get a reference to obj's class */
+    jclass cls = jcls;
+
+    /* Look for the instance field str in cls */
+    fid = env->GetStaticFieldID(cls, "staticInt", "I");
+    if (fid == NULL) {
+        return; /* Failed to find the field */
+    }
+    /* Access the static field staticInt */
+    si = env->GetStaticIntField(cls, fid);
+    LOGI(" FieldAccess.staticInt = %d in accessStaticFieldInStaticNativeMethod", si);
+}
+
+static void JniTest_nativeCallMethod(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jmethodID mid = env->GetMethodID(cls, "callback", "()V");
+    if (mid == NULL) {
+        return;
+    }
+    LOGI("In native code");
+    env->CallVoidMethod(thiz, mid);
+}
+
+static void JniTest_nativeCallStaticMethod(JNIEnv* env, jobject thiz) {
+    jclass cls = env->GetObjectClass(thiz);
+    jmethodID mid = env->GetStaticMethodID(cls, "callbackStatic", "()V");
+    if (mid == NULL) {
+        return;
+    }
+    LOGI("In native code static");
+    env->CallStaticVoidMethod(cls, mid);
+}
+
 static JNINativeMethod gJniTestMethods[] = {
         NATIVE_METHOD(JniTest, stringFromJNI, "()Ljava/lang/String;"),
         NATIVE_METHOD(JniTest, setStringToJNI, "(Ljava/lang/String;)V"),
         NATIVE_METHOD(JniTest, sumIntWithNative, "([III)I"),
         NATIVE_METHOD(JniTest, sumDoubleWithNative, "([DII)D"),
         NATIVE_METHOD(JniTest, initInt2DArray, "(I)[[I"),
+        NATIVE_METHOD(JniTest, accessField, "()V"),
+        NATIVE_METHOD(JniTest, accessStaticField, "()V"),
+        NATIVE_METHOD(JniTest, accessStaticFieldInStaticNativeMethod, "()V"),
+        NATIVE_METHOD(JniTest, nativeCallMethod, "()V"),
+        NATIVE_METHOD(JniTest, nativeCallStaticMethod, "()V")
 };
 
 static int jniRegisterNativeMethods(JNIEnv *env, const char *classPathName,
