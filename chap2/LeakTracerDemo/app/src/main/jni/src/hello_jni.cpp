@@ -197,11 +197,39 @@ static int jniRegisterNativeMethods(JNIEnv *env, const char *classPathName,
     return JNI_TRUE;
 }
 
+char *doAlloc(unsigned int size);
+
 static void register_com_wolfcstech_hellojni_JniTest(JNIEnv *env) {
     jniRegisterNativeMethods(env, "com/wolfcstech/hellojni/JniTest",
                              gJniTestMethods, NELEM(gJniTestMethods));
+
+    // startup part of the program
+    // following allocation is not registered
+    char *lostAtStartup = doAlloc(128); strcpy(lostAtStartup, "Lost at startup");
+
     // starting monitoring allocations
     leaktracer::MemoryTrace::GetInstance().startMonitoringAllThreads();
+    char *memLeak = doAlloc(256); strcpy(memLeak, "This is a real memory leak");
+    char *notLeak = doAlloc(64); strcpy(notLeak, "This is NOT a memory leak");
+
+    char *memLeak2 = (char*)malloc(256); strcpy(memLeak2, "This is a malloc memory leak");
+    free(lostAtStartup);
+
+
+    // stop monitoring allocations, but do still
+    // monitor releases of the memory
+    leaktracer::MemoryTrace::GetInstance().stopMonitoringAllocations();
+    delete[] notLeak;
+    notLeak = doAlloc(32);
+
+    // stop all monitoring, print report
+    leaktracer::MemoryTrace::GetInstance().stopAllMonitoring();
+
+    leaktracer::MemoryTrace::GetInstance().writeLeaksToFile("/sdcard/leaks.out");
+}
+
+char *doAlloc(unsigned int size) {
+	return new char[size];
 }
 
 // DalvikVM calls this on startup, so we can statically register all our native methods.
