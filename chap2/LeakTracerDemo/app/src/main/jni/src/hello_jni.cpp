@@ -3,10 +3,12 @@
 //
 
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "jni.h"
 
 #include "JNIHelper.h"
+#include "MemoryTrace.hpp"
 
 #define TAG "hellojni"
 
@@ -140,6 +142,12 @@ static void JniTest_accessStaticFieldInStaticNativeMethod(JNIEnv* env, jclass jc
     /* Access the static field staticInt */
     si = env->GetStaticIntField(cls, fid);
     LOGI(" FieldAccess.staticInt = %d in accessStaticFieldInStaticNativeMethod", si);
+
+    leaktracer::MemoryTrace::GetInstance().stopAllMonitoring();
+
+    sleep(3);
+    LOGI("To writeLeaksToFile %s.", "/sdcard/leaks.out");
+    leaktracer::MemoryTrace::GetInstance().writeLeaksToFile("/sdcard/leaks.out");
 }
 
 static void JniTest_nativeCallMethod(JNIEnv* env, jobject thiz) {
@@ -192,6 +200,8 @@ static int jniRegisterNativeMethods(JNIEnv *env, const char *classPathName,
 static void register_com_wolfcstech_hellojni_JniTest(JNIEnv *env) {
     jniRegisterNativeMethods(env, "com/wolfcstech/hellojni/JniTest",
                              gJniTestMethods, NELEM(gJniTestMethods));
+    // starting monitoring allocations
+    leaktracer::MemoryTrace::GetInstance().startMonitoringAllThreads();
 }
 
 // DalvikVM calls this on startup, so we can statically register all our native methods.
