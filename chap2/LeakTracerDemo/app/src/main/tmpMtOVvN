@@ -1,0 +1,6 @@
+set osabi GNU/Linux
+file '/media/data/MyProjects/android-network-samples/chap1/HelloJni/app/src/main/obj/local/arm64-v8a/system/bin/app_process32'
+set solib-absolute-prefix /media/data/MyProjects/android-network-samples/chap1/HelloJni/app/src/main/obj/local/arm64-v8a
+set solib-search-path /media/data/MyProjects/android-network-samples/chap1/HelloJni/app/src/main/obj/local/arm64-v8a:/media/data/MyProjects/android-network-samples/chap1/HelloJni/app/src/main/obj/local/arm64-v8a/system/bin:/media/data/MyProjects/android-network-samples/chap1/HelloJni/app/src/main/obj/local/arm64-v8a/system/lib:/media/data/MyProjects/android-network-samples/chap1/HelloJni/app/build/intermediates/ndkBuild/debug/obj/local/armeabi-v7a
+target remote :5039
+
