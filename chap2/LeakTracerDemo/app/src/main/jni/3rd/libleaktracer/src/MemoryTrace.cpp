@@ -22,6 +22,7 @@
 
 #include <dlfcn.h>
 #include <assert.h>
+#include <unwind.h>
 
 #include <stdio.h>
 #include "LeakTracer_l.hpp"
@@ -270,6 +271,39 @@ void MemoryTrace::removeThreadOptions(ThreadMonitoringOptions *pOptions)
 			return;
 		}
 	}
+}
+
+
+struct TraceHandle {
+    void **backtrace;
+    int pos;
+};
+
+_Unwind_Reason_Code Unwind_Trace_Fn(_Unwind_Context *context, void *hnd) {
+    struct TraceHandle *traceHanle = (struct TraceHandle *) hnd;
+    _Unwind_Word ip = _Unwind_GetIP(context);
+    if (traceHanle->pos != ALLOCATION_STACK_DEPTH) {
+        traceHanle->backtrace[traceHanle->pos] = (void *) ip;
+        ++traceHanle->pos;
+        return _URC_NO_REASON;
+    }
+    return _URC_END_OF_STACK;
+}
+
+// stores allocation stack, up to ALLOCATION_STACK_DEPTH
+// frames
+void MemoryTrace::storeAllocationStack(void* arr[ALLOCATION_STACK_DEPTH])
+{
+    unsigned int iIndex = 0;
+
+    TraceHandle traceHandle;
+    traceHandle.backtrace = arr;
+    traceHandle.pos = 0;
+    _Unwind_Backtrace(Unwind_Trace_Fn, &traceHandle);
+
+    // fill remaining spaces
+    for (iIndex = traceHandle.pos; iIndex < ALLOCATION_STACK_DEPTH; iIndex++)
+        arr[iIndex] = NULL;
 }
 
 
