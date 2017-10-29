@@ -7,16 +7,21 @@ import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+    TextView mTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        TextView tv = (TextView) findViewById(R.id.tv);
-        JniTest jniTest = new JniTest();
-        tv.setText(jniTest.stringFromJNI());
+        mTextView = (TextView) findViewById(R.id.tv);
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        JniTest jniTest = new JniTest();
+        mTextView.setText(jniTest.stringFromJNI());
         jniTest.setStringToJNI("String from java");
 
         int[] dataElement = new int[] {
@@ -50,5 +55,9 @@ public class MainActivity extends AppCompatActivity {
 
         jniTest.nativeCallMethod();
         jniTest.nativeCallStaticMethod();
+
+        Log.d(TAG, "java.library.path = " + System.getProperty("java.library.path"));
+        ClassLoader classLoader = getClassLoader();
+        Log.v(TAG, "classLoader = " + classLoader.toString());
     }
 }
